@@ -6,12 +6,6 @@
 //
 
 
-/*
- 
- bug: 切换页面的时候又闪退
- 
- */
-
 #import "ViewController.h"
 
 @interface ViewController ()<UIScrollViewDelegate>
@@ -86,7 +80,7 @@
     
     
     // 初始化一个定时器，一秒钟执行一次
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(autoMovePage) userInfo:nil repeats:YES];
+//    self.timer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(autoMovePage) userInfo:nil repeats:YES];
 }
 
 
@@ -97,7 +91,7 @@
     
     NSLog(@"定时器触发，滑动到下一张");
     
-//    [self.scrollView setContentOffset:CGPointMake((index+1)*self.scrollView.frame.size.width, 0) animated:YES];
+    [self.scrollView setContentOffset:CGPointMake((index+1)*self.scrollView.frame.size.width, 0) animated:YES];
 }
 
 
@@ -107,6 +101,7 @@
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
     // 这个时候可以通过偏移的位置，获取当前的偏移量   再说废话🤣
 //    NSLog(@"scrollViewDidScroll----");
+    // 在这调用会发生 第一页往左滑的时候闪现图片的问题
 //    [self scrollViewDidEndDecelerating:self.scrollView];
 }
 
