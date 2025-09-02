@@ -29,23 +29,20 @@
     const int scrollView_w = 300;
     const int scrollView_h = 150;
     
+    int imageCounts = 6;
+    
+    
     // 创建一个 scrollview
     self.scrollView = [[UIScrollView alloc] init];
     self.scrollView.frame = CGRectMake(50, 200, scrollView_w, scrollView_h);
     [self.view addSubview:self.scrollView];
-    
-    int imageCounts = 6;
-    
     // 设置整个 contentsize 的大小
     self.scrollView.contentSize = CGSizeMake((imageCounts + 2) * scrollView_w, scrollView_h);
     
     
     // 创建一个装 imageview 的数组
     self.imageArray = [NSMutableArray array];
-    
-    
     for(int i = 0; i < imageCounts + 2; i++){
-        
         NSString *image_name;
         
         if(i == 0){ // 在最前面装最后一张图片
@@ -117,49 +114,77 @@
 
 #pragma mark - delegate 行为
 
+// 用户在滑动的时候，更新 pagecontrol 页码
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
     CGFloat pageWidth = self.scrollView.frame.size.width;
     
-    NSInteger curIndex = self.scrollView.contentOffset.x / pageWidth;
+    // 计算出下页的滑动
+    NSInteger nextIndex = self.scrollView.contentOffset.x / pageWidth + 0.5;
+    
+    // 实现滑动到一半的时候，底下的索引就变化
+    self.pageControl.currentPage = nextIndex - 1; // -1 是因为前面有一个最后一页的虚拟页，在上面计算出来的是包含虚拟页的，这个值是指包含这个虚拟页是的第几页；但是 currentPage 是不包含虚拟页的，也就是只有 6 页。
     
     // 更新 curpage 索引
-    if(curIndex == 0){ // 当前的索引在虚假的最后一页
-        self.pageControl.currentPage = self.imageArray.count - 2 - 1;
-    }else if(curIndex == self.imageArray.count - 1){ // 当前的索引在虚假的第一页
-        self.pageControl.currentPage = 0;
-    }else{
-        self.pageControl.currentPage = curIndex - 1;
+    if(nextIndex == 0){ // 当前的索引在虚假的最后一页
+        self.pageControl.currentPage = self.imageArray.count - 2 - 1; // 设置为真正的最后一页
+    }else if(nextIndex == self.imageArray.count - 1){ // 当前的索引在虚假的第一页
+        self.pageControl.currentPage = 0; // 设置为真正的第一页，对于 pageControl 来说就是 0
     }
 }
 
 
-// 判断当前页是否是虚拟页然后执行跳转
+
+// 滑动结束的时候，确定最终停在哪一页，根据 curpage 的值来实现偏移
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
-    NSInteger imagesCount = self.imageArray.count;
+    CGFloat pageWidth = self.scrollView.frame.size.width;
+    NSInteger nextpage = self.pageControl.currentPage + 1; // 这里设置的是偏移，所以要加上前面的虚拟页 + 1
     
-//    NSLog(@"curpage : %ld", self.pageControl.currentPage);
-    
-    // 根据当前滑动的位置，获取当前滑动到的图片
-    int nextindex = self.scrollView.contentOffset.x / self.scrollView.frame.size.width;
-    
-    if(nextindex == 0){ // 表示第一张还往前滑，就滑到了倒数第一张
-        [self.scrollView setContentOffset:CGPointMake((imagesCount - 2) * self.scrollView.frame.size.width, 0)]; 
-        // 更新索引
-        self.pageControl.currentPage = imagesCount - 1;
-        NSLog(@"要滑倒最后一张");
-        
-    }
-    else if(nextindex == imagesCount - 1){ // 滑倒了最后一张，也就是咱们弄的虚假的最后一张，需要直接跳到真正的第一张
-        // 也就是第二张
-        [self.scrollView setContentOffset:CGPointMake( 1 * self.scrollView.frame.size.width, 0)];
-        self.pageControl.currentPage = 0;
-        NSLog(@"要滑倒第一张");
-        
-    }else{
-        NSLog(@"正常的滑倒下一张");
-        
-    }
+     // 根据当前 pagecontrol 的页码，设置偏移
+    [self.scrollView setContentOffset:CGPointMake(nextpage * pageWidth,
+                                                  0)];
 }
+
+
+
+
+
+//// 用户在滑动的时候，更新 pagecontrol 页码
+//- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+//    CGFloat pageWidth = self.scrollView.frame.size.width;
+//    
+//    NSInteger curIndex = self.scrollView.contentOffset.x / pageWidth;
+//    
+//    // 更新 curpage 索引
+//    if(curIndex == 0){ // 当前的索引在虚假的最后一页
+//        self.pageControl.currentPage = self.imageArray.count - 2 - 1; // 设置为真正的最后一页
+//    }else if(curIndex == self.imageArray.count - 1){ // 当前的索引在虚假的第一页
+//        self.pageControl.currentPage = 0; // 设置为真正的第一页，对于 pageControl 来说就是 0
+//    }else{
+//        self.pageControl.currentPage = curIndex - 1;
+//    }
+//}
+
+//// 判断当前页是否是虚拟页然后执行跳转
+//- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
+//    NSInteger imagesCount = self.imageArray.count;
+//    
+//    // 根据当前滑动的位置，获取当前滑动到的图片
+//    int pageIndex = self.scrollView.contentOffset.x / self.scrollView.frame.size.width;
+//    
+//    if(pageIndex == 0){ // 表示第一张还往前滑，就滑到了倒数第一张
+//        [self.scrollView setContentOffset:CGPointMake((imagesCount - 2) * self.scrollView.frame.size.width, 0)]; 
+//    }
+//    else if(pageIndex == imagesCount - 1){ // 滑倒了最后一张，也就是咱们弄的虚假的最后一张，需要直接跳到真正的第一张
+//        // 也就是第二张
+//        [self.scrollView setContentOffset:CGPointMake( 1 * self.scrollView.frame.size.width, 0)];
+//        
+//    }
+////    else{
+////        NSLog(@"正常的滑倒下一张");
+////        
+////    }
+//}
+
 
 
 @end
