@@ -14,6 +14,8 @@
 @property(nonatomic, strong) NSMutableArray *imageArray;
 
 @property(nonatomic, strong) NSTimer *timer;
+
+@property(nonatomic, strong) UIPageControl *pageControl;
 @end
 
 
@@ -81,6 +83,24 @@
     
     // 初始化一个定时器，一秒钟执行一次
 //    self.timer = [NSTimer scheduledTimerWithTimeInterval:2.0 target:self selector:@selector(autoMovePage) userInfo:nil repeats:YES];
+    
+    
+    // 初始化一个 pageControl
+    self.pageControl = [[UIPageControl alloc] init];
+//    NSLog(@"X %ld", (long)CGRectGetMaxX(self.scrollView.frame));
+    NSInteger pageControlWidth = 140;
+    // scrollview 的 y 值 作为参照
+    self.pageControl.frame = CGRectMake(CGRectGetMaxX(self.scrollView.frame) - pageControlWidth,
+                                        CGRectGetMaxY(self.scrollView.frame) - 20,
+                                        pageControlWidth,
+                                        20);
+    
+    self.pageControl.numberOfPages = imageCounts;
+    self.pageControl.currentPage = 0;
+    self.pageControl.pageIndicatorTintColor = [UIColor lightGrayColor];
+    self.pageControl.currentPageIndicatorTintColor = [UIColor systemBackgroundColor];
+    
+    [self.view addSubview:self.pageControl];
 }
 
 
@@ -97,40 +117,48 @@
 
 #pragma mark - delegate 行为
 
-// 在执行滑动的时候
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView{
-    // 这个时候可以通过偏移的位置，获取当前的偏移量   再说废话🤣
-//    NSLog(@"scrollViewDidScroll----");
-    // 在这调用会发生 第一页往左滑的时候闪现图片的问题
-//    [self scrollViewDidEndDecelerating:self.scrollView];
+    CGFloat pageWidth = self.scrollView.frame.size.width;
+    
+    NSInteger curIndex = self.scrollView.contentOffset.x / pageWidth;
+    
+    // 更新 curpage 索引
+    if(curIndex == 0){ // 当前的索引在虚假的最后一页
+        self.pageControl.currentPage = self.imageArray.count - 2 - 1;
+    }else if(curIndex == self.imageArray.count - 1){ // 当前的索引在虚假的第一页
+        self.pageControl.currentPage = 0;
+    }else{
+        self.pageControl.currentPage = curIndex - 1;
+    }
 }
 
 
-// 确定滑动的时候
+// 判断当前页是否是虚拟页然后执行跳转
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
-//    // 
-//    NSLog(@"scrollViewDidEndDecelerating---");
-    
     NSInteger imagesCount = self.imageArray.count;
     
+//    NSLog(@"curpage : %ld", self.pageControl.currentPage);
+    
     // 根据当前滑动的位置，获取当前滑动到的图片
-    int index = self.scrollView.contentOffset.x / self.scrollView.frame.size.width;
+    int nextindex = self.scrollView.contentOffset.x / self.scrollView.frame.size.width;
     
-    if(index == 0){ // 表示第一张还往前滑，就滑到了倒数第一张
-        [self.scrollView setContentOffset:CGPointMake((imagesCount - 2) * self.scrollView.frame.size.width,
-                                                      0)]; 
+    if(nextindex == 0){ // 表示第一张还往前滑，就滑到了倒数第一张
+        [self.scrollView setContentOffset:CGPointMake((imagesCount - 2) * self.scrollView.frame.size.width, 0)]; 
+        // 更新索引
+        self.pageControl.currentPage = imagesCount - 1;
         NSLog(@"要滑倒最后一张");
+        
     }
-    else if(index == imagesCount - 1){ // 滑倒了最后一张，也就是咱们弄的虚假的最后一张，需要直接跳到真正的第一张
+    else if(nextindex == imagesCount - 1){ // 滑倒了最后一张，也就是咱们弄的虚假的最后一张，需要直接跳到真正的第一张
         // 也就是第二张
-        [self.scrollView setContentOffset:CGPointMake( 1 * self.scrollView.frame.size.width,
-                                                      0)];
-        NSLog(@"要滑倒第一章");
+        [self.scrollView setContentOffset:CGPointMake( 1 * self.scrollView.frame.size.width, 0)];
+        self.pageControl.currentPage = 0;
+        NSLog(@"要滑倒第一张");
+        
     }else{
-        // 但是会打印多次
         NSLog(@"正常的滑倒下一张");
+        
     }
-    
 }
 
 
